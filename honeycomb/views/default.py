@@ -1,4 +1,7 @@
 from pyramid.view import view_config
+from pyramid.httpexceptions import HTTPSeeOther
+from pyramid_storage.exceptions import FileNotAllowed
+from pyramid_storage import extensions
 
 from ..models import *
 
@@ -19,8 +22,25 @@ def honeycomb(request):
         honeycomb_title = request.context.title
     else:
         honeycomb_title = "Wild honeycomb"
+    if hasattr(request.context, 'map'):
+        map = request.context.map
+    else:
+        map = None
     cells = [(request.context[cell], request.resource_url(request.context, cell)) for cell in request.context]
-    return {'project': 'Honeycomb', 'title': honeycomb_title, 'cells': cells}
+    return {'project': 'Honeycomb', 'title': honeycomb_title, 'map': map, 'cells': cells}
+
+
+@view_config(context=Honeycomb, request_method='POST')
+def honeycomb_update(request):
+    filename = None
+    try:
+        filename = request.storage.save(request.POST['honeycomb_map'], folder="maps", randomize=True, extensions=extensions.DATA+extensions.IMAGES)
+    except FileNotAllowed:
+        request.session.flash('Sorry, this file is not allowed')
+    if filename:
+        request.context.set_map(HoneyStaticMap(request.static_url("honeycomb:static/uploads/")+filename))
+    return HTTPSeeOther(request.resource_url(request.context))
+
 
 @view_config(context=CellText, renderer='honeycomb:templates/cell.jinja2')
 def textcell(request):

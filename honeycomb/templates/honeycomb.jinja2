@@ -5,6 +5,17 @@
   <h1><span class="font-semi-bold">{{ project }}</span> <span class="smaller"></span></h1>
   <p class="lead"></p>
 
+  {% if map %}
+  {{ map.render()|safe }}
+  {% else %}
+    <form method="post" accept-charset="utf-8" enctype="multipart/form-data">
+    <label for="honeycomb_map">Honeycomb Map</label>
+    <input id="honeycomb_map" name="honeycomb_map" type="file" value="" />
+
+    <input type="submit" value="submit" />
+</form>
+  {% endif %}
+
   <h2><span class="font-normal">List of available cells</span></h2>
     <ul>
 {%  for cell, url in cells %}

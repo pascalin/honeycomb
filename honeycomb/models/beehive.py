@@ -4,7 +4,9 @@ from persistent.mapping import PersistentMapping
 
 
 class BeeHive(PersistentMapping):
-    """A container of Honeycombs."""
+    """A container of Honeycombs. This represents the top-level hierarchy which gives entry to honeycombs. It should
+    display the user a mosaic view of available honeycombs, highlighting already completed and recently visited ones,
+    as well as those featured by creators and managers."""
     __name__ = None
     __parent__ = None
 
@@ -17,14 +19,20 @@ class BeeHive(PersistentMapping):
 
 
 class Honeycomb(PersistentMapping):
-    """A collection of interactive and non-interactive cells."""
+    """A collection of interactive and non-interactive cells. It must have an associated map (either static or dynamic) which will be displayed when the honeycomb is opened."""
 
     def __init__(self, name, title=""):
         PersistentMapping.__init__(self)
         self.__name__ = name
         self.title = title
         self.icon = None
+        self.map = None
 
+    def set_map(self, honeycombmap):
+        self.map = honeycombmap
+
+    def get_map(self):
+        return self.map
 
 class HoneyStaticMap(Persistent):
     """A graphical representation of the Honeycomb structure."""
@@ -32,6 +40,11 @@ class HoneyStaticMap(Persistent):
         Persistent.__init__(self)
         self.href = url
 
+    def render(self):
+        return f'<img src="{self.href}">'
+
+    def update(self, url):
+        self.href = url
 
 class HoneyDynamicMap(Persistent):
     """A complex representation of the Honeycomb structure."""
