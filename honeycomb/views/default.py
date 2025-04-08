@@ -38,7 +38,10 @@ def honeycomb_update(request):
     except FileNotAllowed:
         request.session.flash('Sorry, this file is not allowed')
     if filename:
-        request.context.set_map(HoneyStaticMap(request.static_url("honeycomb:static/uploads/")+filename))
+        prev_filename = request.context.map and request.context.map.filename
+        request.context.set_map(HoneyStaticMap(request.storage.url(filename)))
+        if prev_filename:
+            request.storage.delete(prev_filename)
     return HTTPSeeOther(request.resource_url(request.context))
 
 

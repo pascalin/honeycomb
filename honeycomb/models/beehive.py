@@ -36,15 +36,17 @@ class Honeycomb(PersistentMapping):
 
 class HoneyStaticMap(Persistent):
     """A graphical representation of the Honeycomb structure."""
-    def __init__(self, url):
+    def __init__(self, url, filename=None):
         Persistent.__init__(self)
         self.href = url
+        self.filename = filename
 
     def render(self):
         return f'<img src="{self.href}">'
 
-    def update(self, url):
+    def update(self, url, filename=None):
         self.href = url
+        self.filename = filename
 
 class HoneyDynamicMap(Persistent):
     """A complex representation of the Honeycomb structure."""
