@@ -1,19 +1,25 @@
 from pyramid.view import view_config
-from pyramid.httpexceptions import HTTPSeeOther
+from pyramid.httpexceptions import HTTPSeeOther, HTTPFound
 from pyramid_storage.exceptions import FileNotAllowed
 from pyramid_storage import extensions
 
 from ..models import *
 
 
-@view_config(context=BeeHive, renderer='honeycomb:templates/beehive.jinja2')
-def beehive(request):
-    if hasattr(request.context, 'title'):
-        beehive_title = request.context.title
-    else:
-        beehive_title = "Wild beehive"
-    honeycombs = [(request.context[honeycomb], request.resource_url(request.context, honeycomb)) for honeycomb in request.context]
-    return {'project': 'Honeycomb', 'title': beehive_title, 'honeycombs': honeycombs}
+@view_config(context=BeeHive, renderer='templates/beehive.jinja2')
+def beehive_view(context, request):
+    # La vista ahora está limpia y solo prepara los datos para la plantilla.
+    honeycombs = []
+    for name, hc in context.items():
+        hc_url = request.resource_url(hc)
+        cells = [(cell, request.resource_url(cell)) for cell in hc.values()]
+        honeycombs.append((hc, hc_url, cells))
+    return {
+        'project': 'BeeHive Project',
+        'title': context.__name__,
+        'honeycombs': honeycombs,
+        'request': request,      
+    }
 
 
 @view_config(context=Honeycomb, renderer='honeycomb:templates/honeycomb.jinja2')
@@ -44,7 +50,6 @@ def honeycomb_update(request):
             request.storage.delete(prev_filename)
     return HTTPSeeOther(request.resource_url(request.context))
 
-
 @view_config(context=CellText, renderer='honeycomb:templates/cell.jinja2')
 def textcell(request):
     if hasattr(request.context, 'title'):
@@ -52,3 +57,95 @@ def textcell(request):
     else:
         cell_title = "Wild cell"
     return {'project': 'Honeycomb', 'title': cell_title, 'contents': request.context.contents}
+
+@view_config(context=CellText, name='CreateNew', renderer='templates/view_cell_text.jinja2')
+def view_cell_text(context, request):
+    return {"cell": context}
+
+
+@view_config(context=CellText, name='edit', renderer='templates/edit_cell_text.jinja2')
+def edit_cell_text(context, request):
+    if 'form.submitted' in request.params:
+        context.title = request.params['title']
+        context.contents = request.params['contents']
+        return HTTPFound(location=request.resource_url(context))
+    return {"cell": context}
+
+
+# Vistas Nuevas
+@view_config(context=CellRichText, renderer='honeycomb:templates/cell.jinja2')
+def richtextcell(request):
+    title = getattr(request.context, 'title', "Wild cell")
+    return {'project': 'Honeycomb', 'title': title, 'contents': request.context.source}
+
+
+@view_config(context=CellRichText, name='CreateNew', renderer='templates/view_cell_richtext.jinja2')
+def view_cell_richtext(context, request):
+    return {"cell": context}
+
+
+@view_config(context=CellRichText, name='edit', renderer='templates/edit_cell_richtext.jinja2')
+def edit_cell_richtext(context, request):
+    if 'form.submitted' in request.params:
+        context.title = request.params['title']
+        context.source = request.params['contents']
+        return HTTPFound(location=request.resource_url(context))
+    return {"cell": context}
+
+
+@view_config(context=CellAnimation, name='CreateNew', renderer='honeycomb:templates/cell.jinja2')
+def animationcell(request):
+    title = getattr(request.context, 'title', "Wild cell")
+    return {'project': 'Honeycomb', 'title': title, 'contents': request.context.href}
+
+
+@view_config(context=CellAnimation, renderer='templates/view_cell_animation.jinja2')
+def view_cell_animation(context, request):
+    return {"cell": context}
+
+
+@view_config(context=CellAnimation, name='edit', renderer='honeycomb:templates/edit_cell_animation.jinja2')
+def edit_cell_animation(context, request):
+    if 'form.submitted' in request.params:
+        context.title = request.params.get('title', context.title)
+        context.href = request.params.get('href', context.href)
+        context.icon = request.params.get('icon', context.icon)
+        return HTTPFound(location=request.resource_url(context))
+    return {"cell": context}
+
+@view_config(context=CellWebContent, renderer='honeycomb:templates/view_cell_webcontent.jinja2')
+def webcell(context, request):
+    return {'cell': context}
+
+
+@view_config(context=CellWebContent, name='CreateNew', renderer='templates/view_cell_webcontent.jinja2')
+def view_cell_webcontent(context, request):
+    return {"cell": context}
+
+
+@view_config(context=CellWebContent, name='edit', renderer='templates/edit_cell_webcontent.jinja2')
+def edit_cell_webcontent(context, request):
+    if 'form.submitted' in request.params:
+        context.title = request.params['title']
+        context.href = request.params['contents']
+        return HTTPFound(location=request.resource_url(context))
+    return {"cell": context}
+
+@view_config(context=CellIcon, renderer='honeycomb:templates/cell.jinja2')
+def iconcell(request):
+    title = getattr(request.context, 'title', "Wild cell")
+    return {'project': 'Honeycomb', 'title': title, 'contents': request.context.icon}
+
+
+@view_config(context=CellIcon, name='CreateNew', renderer='templates/view_cell_icon.jinja2')
+def view_cell_icon(context, request):
+    return {"cell": context}
+
+
+@view_config(context=CellIcon, name='edit', renderer='honeycomb:templates/edit_cell_icon.jinja2')
+def edit_cell_icon(context, request):
+    if 'form.submitted' in request.params:
+        context.title = request.params.get('title', context.title)
+        context.icon = request.params.get('icon', context.icon)
+        return HTTPFound(location=request.resource_url(context))
+    return {"cell": context}

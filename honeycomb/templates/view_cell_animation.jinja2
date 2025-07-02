@@ -1,0 +1,11 @@
+{% extends "layout.jinja2" %}
+
+{% block content %}
+  <h2>{{ cell.title }}</h2>
+
+  <img src="{{ cell.href }}" alt="{{ cell.title }}" style="max-width: 100%; height: auto;" />
+
+  <p>
+    <a href="{{ cell.href }}" target="_blank">Abrir animación en nueva pestaña</a>
+  </p>
+{% endblock %}

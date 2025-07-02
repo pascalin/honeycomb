@@ -10,6 +10,10 @@ class BeeHive(PersistentMapping):
     __name__ = None
     __parent__ = None
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.title = "BeeHive Root" 
+
     def set_name(self, name, title=""):
         self.__name__ = name
         self.title = title
@@ -74,33 +78,76 @@ class StaticCell(Persistent):
 
 
 class CellIcon(Persistent):
-    """A BeeHive cell icon"""
-    pass
+    """A BeeHive cell icon."""
+    def __init__(self, name, title="", icon=None):
+        Persistent.__init__(self)
+        self.__name__ = name
+        self.title = title
+        self.icon = icon
 
+    def set_icon(self, icon):
+        self.icon = icon
+
+    def get_icon(self):
+        return self.icon
+    
 
 class CellText(Persistent):
-    def __init__(self, name, contents, title=""):
+    def __init__(self, name, contents, title="", icon=None):
         Persistent.__init__(self)
         self.__name__ = name
         self.title = title
         self.contents = contents
+        self.icon = icon
+
+    def set_icon(self, icon):
+        self.icon = icon
+
+    def get_icon(self):
+        return self.icon
 
 
 class CellRichText(Persistent):
-    def __init__(self, name, contents, title=""):
+    def __init__(self, name, contents, title="", icon=None):
         Persistent.__init__(self)
         self.__name__ = name
         self.title = title
         self.source = contents
+        self.icon = icon
+
+    def set_icon(self, icon):
+        self.icon = icon
+
+    def get_icon(self):
+        return self.icon
 
 
 class CellAnimation(Persistent):
-    def __init__(self, url):
+    def __init__(self, name, url, title="", icon=None):
         Persistent.__init__(self)
+        self.__name__ = name
         self.href = url
+        self.title = title
+        self.icon = icon
+
+    def set_icon(self, icon):
+        self.icon = icon
+
+    def get_icon(self):
+        return self.icon
 
 
 class CellWebContent(Persistent):
-    def __init__(self, url):
+    def __init__(self, name, url, title="", icon=None):
         Persistent.__init__(self)
+        self.__name__ = name
         self.href = url
+        self.title = title
+        self.icon = icon
+
+    def set_icon(self, icon):
+        self.icon = icon
+
+    def get_icon(self):
+        return self.icon
+

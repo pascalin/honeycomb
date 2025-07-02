@@ -1,0 +1,16 @@
+{% extends "layout.jinja2" %}
+{% block content %}
+<h2>Editar {{ cell.title }} (Icon)</h2>
+
+<form method="POST">
+  <label>Título:<br>
+    <input type="text" name="title" value="{{ cell.title }}">
+  </label><br><br>
+
+  <label>Icono:<br>
+    <input type="text" name="icon" value="{{ cell.icon }}">
+  </label><br><br>
+
+  <input type="submit" name="form.submitted" value="Guardar">
+</form>
+{% endblock %}
