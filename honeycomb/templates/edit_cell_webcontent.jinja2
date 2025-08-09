@@ -1,0 +1,12 @@
+{% extends "layout.jinja2" %}
+{% block content %}
+<h2>{{ 'Crear' if new else 'Editar' }} celda de contenido web</h2>
+<form method="post">
+  {% if new %}
+    <label>Nombre único:<br><input type="text" name="name"></label><br>
+  {% endif %}
+  <label>Título:<br><input type="text" name="title" value="{{ cell.title }}"></label><br>
+  <label>URL embebida (iframe):<br><input type="text" name="contents" value="{{ cell.href }}" size="80"></label><br>
+  <button type="submit" name="form.submitted">Guardar</button>
+</form>
+{% endblock %}
