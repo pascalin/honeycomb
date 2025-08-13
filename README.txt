@@ -28,3 +28,19 @@ Getting Started
 - Run your project.
 
     env/bin/pserve development.ini
+
+
+Running into a Docker Container
+-------------------------
+
+- Change directory into your newly created project.
+
+- Run the following command to build the honeycomb image.
+
+    docker build -t "honeycomb:latest" .
+
+- Create a new container based on the honeycomb:latest image.
+
+    docker run -p 6543:6543 --rm honeycomb:latest
+
+- Open your browser and visit: http://127.0.0.1:6543
