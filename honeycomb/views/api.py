@@ -8,7 +8,7 @@ from ..models import *
 
 
 @resource(collection_path='/api/v1/honeycombs', path='/api/v1/honeycombs/{name}', cors_origins=('*',), factory='honeycomb.root_factory')
-class Node:
+class HoneycombResource:
     def __init__(self, request, context=None):
         self.request = request
         self.context = context
