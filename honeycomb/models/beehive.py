@@ -2,6 +2,7 @@ from zope.interface import Interface, implementer
 from persistent import Persistent
 from persistent.mapping import PersistentMapping
 
+import uuid
 
 class BeeHive(PersistentMapping):
     """A container of Honeycombs. This represents the top-level hierarchy which gives entry to honeycombs. It should
@@ -38,10 +39,28 @@ class Honeycomb(PersistentMapping):
     def get_map(self):
         return self.map
 
-class HoneyStaticMap(Persistent):
+
+class CellNode(PersistentMapping):
+    """A node in the honeycomb structure, it can contain children nodes or be alone, it can also be static or interactive."""
+    def __init__(self, name="", parent=None):
+        PersistentMapping.__init__(self)
+        self.__name__ = name
+        self.__parent__ = parent
+        self.title = ""
+        self.icon = None
+        self.id = uuid.uuid4()
+
+    def set_icon(self, icon):
+        self.icon = icon
+
+    def get_icon(self):
+        return self.icon
+
+
+class HoneyStaticMap(CellNode):
     """A graphical representation of the Honeycomb structure."""
     def __init__(self, url, filename=None):
-        Persistent.__init__(self)
+        CellNode.__init__(self)
         self.href = url
         self.filename = filename
 
@@ -52,35 +71,35 @@ class HoneyStaticMap(Persistent):
         self.href = url
         self.filename = filename
 
-class HoneyDynamicMap(Persistent):
+class HoneyDynamicMap(CellNode):
     """A complex representation of the Honeycomb structure."""
     def __init__(self, structure):
-        Persistent.__init__(self)
+        CellNode.__init__(self)
         self.structure = structure
 
 
-class InteractiveCell(Persistent):
+class InteractiveCell(CellNode):
     """A BeeHive cell containing an interactive element"""
     def __init__(self, name, title=""):
-        Persistent.__init__(self)
+        CellNode.__init__(self)
         self.__name__ = name
         self.title = title
         self.icon = None
 
 
-class StaticCell(Persistent):
+class StaticCell(CellNode):
     """A BeeHive cell containing static elements"""
     def __init__(self, name, title=""):
-        Persistent.__init__(self)
+        CellNode.__init__(self)
         self.__name__ = name
         self.title = title
         self.icon = None
 
 
-class CellIcon(Persistent):
+class CellIcon(CellNode):
     """A BeeHive cell icon."""
     def __init__(self, name, title="", icon=None):
-        Persistent.__init__(self)
+        CellNode.__init__(self)
         self.__name__ = name
         self.title = title
         self.icon = icon
@@ -92,9 +111,9 @@ class CellIcon(Persistent):
         return self.icon
     
 
-class CellText(Persistent):
+class CellText(CellNode):
     def __init__(self, name, contents, title="", icon=None):
-        Persistent.__init__(self)
+        CellNode.__init__(self)
         self.__name__ = name
         self.title = title
         self.contents = contents
@@ -107,9 +126,9 @@ class CellText(Persistent):
         return self.icon
 
 
-class CellRichText(Persistent):
+class CellRichText(CellNode):
     def __init__(self, name, contents, title="", icon=None):
-        Persistent.__init__(self)
+        CellNode.__init__(self)
         self.__name__ = name
         self.title = title
         self.source = contents
@@ -122,9 +141,9 @@ class CellRichText(Persistent):
         return self.icon
 
 
-class CellAnimation(Persistent):
+class CellAnimation(CellNode):
     def __init__(self, name, url, title="", icon=None):
-        Persistent.__init__(self)
+        CellNode.__init__(self)
         self.__name__ = name
         self.href = url
         self.title = title
@@ -137,9 +156,9 @@ class CellAnimation(Persistent):
         return self.icon
 
 
-class CellWebContent(Persistent):
+class CellWebContent(CellNode):
     def __init__(self, name, url, title="", icon=None):
-        Persistent.__init__(self)
+        CellNode.__init__(self)
         self.__name__ = name
         self.href = url
         self.title = title
