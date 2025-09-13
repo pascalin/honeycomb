@@ -1,3 +1,4 @@
+from platform import node
 import uuid
 import math
 
@@ -88,3 +89,58 @@ class HoneycombResource:
             "nodes": [hc_node] + child_nodes,
             "edges": edges,
         }
+
+@resource(path='/api/v1/node/{node_id}', cors_origins=('*',), factory='honeycomb.root_factory')
+class NodeResource:
+    def __init__(self, request, context=None):
+        self.request = request
+        self.context = context
+
+    def get(self):
+        root = traversal.find_root(resource=self.context)
+        print("Tipo de root:", type(root))
+        print("Nodos en índice:", list(root.__nodes__.keys()))
+        if not hasattr(root, "__nodes__"):
+            root.__nodes__ = OOBTree()
+        if not hasattr(root, "__edges__"):
+            root.__edges__ = OOBTree()
+
+        node_id = self.request.matchdict['node_id']
+        node = root.__nodes__.get(node_id)
+        print("Nodo encontrado:", repr(node), type(node))
+        try:
+            print("node.title:", node.title)
+        except Exception as e:
+            print("Error accediendo a node.title:", e)
+        if node is None:
+            self.request.response.status = 404
+            return {'error': 'Node not found'}
+
+        data = {
+            "id": str(node.id),
+            "label": getattr(node, "title", ""),
+            "contents": getattr(node, "contents", ""),
+            "url": self.request.resource_url(node),
+            "icon_url": getattr(node, "icon", None),
+            "nodes": [],
+            "edges": [],
+        }
+
+
+        if hasattr(node, "nodes") and hasattr(node, "edges"):
+            data["nodes"] = node.nodes
+            data["edges"] = node.edges
+
+        elif hasattr(node, "values"):
+            for child in node.values():
+                data["nodes"].append({
+                    "id": str(child.id),
+                    "label": getattr(child, "title", ""),
+                    "url": self.request.resource_url(child),
+                    "icon_url": getattr(child, "icon", None),
+                })
+
+            edges = root.__edges__.get(node_id, [])
+            data["edges"] = [edge for edge in edges]
+            
+        return data
