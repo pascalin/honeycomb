@@ -1,10 +1,7 @@
-from platform import node
 import uuid
 import math
-
 from cornice.resource import resource
 from pyramid import traversal
-
 from ..models import *
 
 
@@ -121,7 +118,7 @@ class NodeResource:
             "label": getattr(node, "title", ""),
             "contents": getattr(node, "contents", ""),
             "url": self.request.resource_url(node),
-            "icon_url": getattr(node, "icon", None),
+            "iconUrl": getattr(node, "icon", None),
             "nodes": [],
             "edges": [],
         }
@@ -137,7 +134,7 @@ class NodeResource:
                     "id": str(child.id),
                     "label": getattr(child, "title", ""),
                     "url": self.request.resource_url(child),
-                    "icon_url": getattr(child, "icon", None),
+                    "iconUrl": getattr(child, "icon", None),
                 })
 
             edges = root.__edges__.get(node_id, [])
