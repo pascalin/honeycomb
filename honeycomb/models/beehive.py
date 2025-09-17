@@ -5,8 +5,6 @@ from BTrees._OOBTree import OOBTree
 from persistent.list import PersistentList
 import uuid
 
-import uuid
-
 class BeeHive(PersistentMapping):
     """A container of Honeycombs. This represents the top-level hierarchy which gives entry to honeycombs. It should
     display the user a mosaic view of available honeycombs, highlighting already completed and recently visited ones,
@@ -50,6 +48,7 @@ class Honeycomb(PersistentMapping):
 
     def __init__(self, name, title=""):
         PersistentMapping.__init__(self)
+        self.id = str(uuid.uuid4())
         self.__name__ = name
         self.title = title
         self.icon = None
