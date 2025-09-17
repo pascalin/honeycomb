@@ -2,6 +2,7 @@ from pyramid.view import view_config
 from pyramid.httpexceptions import HTTPSeeOther, HTTPFound
 from pyramid_storage.exceptions import FileNotAllowed
 from pyramid_storage import extensions
+from pyramid import traversal
 
 from ..models import *
 
@@ -58,8 +59,20 @@ def textcell(request):
         cell_title = "Wild cell"
     return {'project': 'Honeycomb', 'title': cell_title, 'contents': request.context.contents}
 
+
 @view_config(context=CellText, name='CreateNew', renderer='templates/view_cell_text.jinja2')
 def view_cell_text(context, request):
+    # Ejemplo de creación de un nuevo nodo
+    if 'form.submitted' in request.params:
+        title = request.params.get('title', '')
+        contents = request.params.get('contents', '')
+        nuevo_nodo = CellText(name=title, contents=contents, title=title)
+        # Agregar el nodo al Honeycomb actual
+        request.context[nuevo_nodo.__name__] = nuevo_nodo
+        # Agregar el nodo al índice de BeeHive
+        beehive = traversal.find_root(resource=request.context)
+        beehive.add_node(nuevo_nodo)
+        return HTTPFound(location=request.resource_url(nuevo_nodo))
     return {"cell": context}
 
 

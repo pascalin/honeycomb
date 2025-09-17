@@ -1,7 +1,8 @@
 from zope.interface import Interface, implementer
 from persistent import Persistent
 from persistent.mapping import PersistentMapping
-
+from BTrees._OOBTree import OOBTree
+from persistent.list import PersistentList
 import uuid
 
 class BeeHive(PersistentMapping):
@@ -13,7 +14,26 @@ class BeeHive(PersistentMapping):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.title = "BeeHive Root" 
+        self.title = "BeeHive Root"
+
+        self.__nodes__ = OOBTree()
+        self.__edges__ = OOBTree()
+    
+    # gestión de nodos y aristas
+    def add_node(self, node):
+        node_id = str(node.id)
+        self.__nodes__[node_id] = node
+
+    def add_edge(self, source_id, edge):
+        if source_id not in self.__edges__:
+            self.__edges__[source_id] = PersistentList()
+        self.__edges__[source_id].append(edge)
+
+    def remove_node(self, node_id):
+        if node_id in self.__nodes__:
+            del self.__nodes__[node_id]
+        if node_id in self.__edges__:
+            del self.__edges__[node_id]
 
     def set_name(self, name, title=""):
         self.__name__ = name
@@ -28,6 +48,7 @@ class Honeycomb(PersistentMapping):
 
     def __init__(self, name, title=""):
         PersistentMapping.__init__(self)
+        self.id = str(uuid.uuid4())
         self.__name__ = name
         self.title = title
         self.icon = None
