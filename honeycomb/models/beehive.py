@@ -3,7 +3,7 @@ from persistent import Persistent
 from persistent.mapping import PersistentMapping
 from BTrees._OOBTree import OOBTree
 from persistent.list import PersistentList
-import uuid
+import json, uuid
 
 class BeeHive(PersistentMapping):
     """A container of Honeycombs. This represents the top-level hierarchy which gives entry to honeycombs. It should
@@ -101,7 +101,7 @@ class CellEdge(Persistent):
         self.to_node = to_node
         self.kind = kind
 
-class HoneycombGraph(Honeycomb): 
+class HoneycombGraph(Honeycomb):
     def __init__(self, name="", title="", *args, **kwargs):
         super().__init__(name, title)  
         self.nodes = PersistentList()
@@ -123,6 +123,52 @@ class HoneycombGraph(Honeycomb):
             if getattr(node, '__name__', None) == name:
                 return node
         return None
+
+    @classmethod
+    def from_json(self, json_data, name="graph", title="Honeycomb Graph"):
+        graph_data = json.loads(json_data)
+        # Diccionario para mapear ID de JSON a objeto de nodo de Python
+        nodes_map = {}
+
+        graph = HoneycombGraph(name, title)
+
+        # 1. Crear todos los objetos de nodo
+        for node_data in graph_data['nodes']:
+            json_id = node_data['id']
+            node_obj = CellText( #ToDo: Graphs can have different kinds of node, this should also be codified in the JSON
+                title=node_data['data']['label'],
+                name=node_data['data']['label'].lower().replace(" ", "-"), #ToDo: Nodes should have a name, if it is not provided, it could be a scrub from the title or label. Use id as name only if there is no other option.
+                contents=node_data['data']['label']
+            )
+            node_obj.id = json_id
+            node_obj.__parent__ = graph
+
+            # Añadir al grafo principal y al mapa temporal
+            graph.add_node(node_obj)
+            nodes_map[json_id] = node_obj
+
+        # 2. Crear todos los objetos de arista (edge)
+        for edge_data in graph_data['edges']:
+            source_id = edge_data['source']
+            target_id = edge_data['target']
+            
+            from_node = nodes_map.get(source_id)
+            to_node = nodes_map.get(target_id)
+            
+            if from_node and to_node:
+                edge_obj = CellEdge(
+                    name=f"edge-{uuid.uuid4()}",
+                    title=edge_data.get('label', ''),
+                    from_node=from_node,
+                    to_node=to_node,
+                    kind="default"
+                )
+                graph.add_edge(edge_obj)
+
+        print(f"DEBUG - Grafo '{graph.title}' generado con {len(graph.nodes)} nodos y {len(graph.edges)} aristas.")
+
+        return graph
+
 
     def to_dict(self):
         """
