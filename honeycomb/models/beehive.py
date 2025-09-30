@@ -21,7 +21,7 @@ class BeeHive(PersistentMapping):
 
     # gestión de nodos y aristas
     def add_node(self, node):
-        node_id = str(getattr(node, "__name__", None) or getattr(node, "id", None))
+        node_id = str(getattr(node, "id", "")) or getattr(node, "__name__", None)
         #node.__parent__ = self
         self.__nodes__[node_id] = node
 
@@ -104,6 +104,7 @@ class CellEdge(Persistent):
 class HoneycombGraph(PersistentMapping):
     def __init__(self, name="", title="", *args, **kwargs):
         super().__init__()
+        self.id = uuid.uuid4()
         self.__name__ = name
         self.title = title
         self.nodes = PersistentList()
@@ -140,11 +141,19 @@ class HoneycombGraph(PersistentMapping):
         # 1. Crear todos los objetos de nodo
         for node_data in graph_data['nodes']:
             json_id = node_data['id']
-            node_obj = CellText( #ToDo: Graphs can have different kinds of node, this should also be codified in the JSON
-                title=node_data['data']['label'],
-                name=node_data['data']['label'].lower().replace(" ", "-"), #ToDo: Nodes should have a name, if it is not provided, it could be a scrub from the title or label. Use id as name only if there is no other option.
-                contents=node_data['data']['label']
-            )
+            node_type = node_data.get("type", None)
+            assert node_type in ['custom', None]
+            if node_type == "custom":
+                node_obj = CellNode(
+                    name=node_data['data']['label'].lower().replace(" ", "-"),
+                    title = node_data['data']['label'],
+                )
+            elif node_type == None:
+                node_obj = CellText( #ToDo: Graphs can have different kinds of node, this should also be codified in the JSON
+                    title=node_data['data']['label'],
+                    name=node_data['data']['label'].lower().replace(" ", "-"), #ToDo: Nodes should have a name, if it is not provided, it could be a scrub from the title or label. Use id as name only if there is no other option.
+                    contents=node_data['data']['label']
+                )
             node_obj.id = json_id
             node_obj.__parent__ = graph
 
@@ -205,13 +214,25 @@ class HoneycombGraph(PersistentMapping):
         }
 
 
-class CellNode(Persistent):
-    """A node in the honeycomb structure, it can contain children nodes or be alone, it can also be static or interactive."""
-    def __init__(self, name="", parent=None):
+class CellLeaf(Persistent):
+    """A terminal node in the honeycomb structure, it cannot have children nodes."""
+    def __init__(self, name="", parent=None, title=""):
         super().__init__()
         self.__name__ = name
         self.__parent__ = parent
-        self.title = ""
+        self.title = title
+        self.icon = None
+        # Cada nodo tiene un ID único y persistente
+        self.id = uuid.uuid4()
+
+
+class CellNode(PersistentMapping):
+    """A node in the honeycomb structure, it can contain children nodes or be alone, it can also be static or interactive."""
+    def __init__(self, name="", parent=None, title=""):
+        super().__init__()
+        self.__name__ = name
+        self.__parent__ = parent
+        self.title = title
         self.icon = None
         # Cada nodo tiene un ID único y persistente
         self.id = uuid.uuid4()
@@ -223,10 +244,10 @@ class CellNode(Persistent):
         return self.icon
 
 
-class HoneyStaticMap(CellNode):
+class HoneyStaticMap(CellLeaf):
     """A graphical representation of the Honeycomb structure."""
     def __init__(self, url, filename=None):
-        CellNode.__init__(self)
+        super().__init__(self)
         self.href = url
         self.filename = filename
 
@@ -237,35 +258,35 @@ class HoneyStaticMap(CellNode):
         self.href = url
         self.filename = filename
 
-class HoneyDynamicMap(CellNode):
+class HoneyDynamicMap(CellLeaf):
     """A complex representation of the Honeycomb structure."""
     def __init__(self, structure):
-        CellNode.__init__(self)
+        super().__init__(self)
         self.structure = structure
 
 
-class InteractiveCell(CellNode):
+class InteractiveCell(CellLeaf):
     """A BeeHive cell containing an interactive element"""
     def __init__(self, name, title=""):
-        CellNode.__init__(self)
+        super().__init__(self)
         self.__name__ = name
         self.title = title
         self.icon = None
 
 
-class StaticCell(CellNode):
+class StaticCell(CellLeaf):
     """A BeeHive cell containing static elements"""
     def __init__(self, name, title=""):
-        CellNode.__init__(self)
+        super().__init__(self)
         self.__name__ = name
         self.title = title
         self.icon = None
 
 
-class CellIcon(CellNode):
+class CellIcon(CellLeaf):
     """A BeeHive cell icon."""
     def __init__(self, name, title="", icon=None):
-        CellNode.__init__(self)
+        super().__init__(self)
         self.__name__ = name
         self.title = title
         self.icon = icon
@@ -277,9 +298,9 @@ class CellIcon(CellNode):
         return self.icon
     
 
-class CellText(CellNode):
+class CellText(CellLeaf):
     def __init__(self, name, contents, title="", icon=None):
-        CellNode.__init__(self)
+        super().__init__(self)
         self.__name__ = name
         self.title = title
         self.contents = contents
@@ -300,9 +321,9 @@ class CellText(CellNode):
         return self.icon
 
 
-class CellRichText(CellNode):
+class CellRichText(CellLeaf):
     def __init__(self, name, contents, title="", icon=None):
-        CellNode.__init__(self)
+        super().__init__(self)
         self.__name__ = name
         self.title = title
         self.source = contents
@@ -315,9 +336,9 @@ class CellRichText(CellNode):
         return self.icon
 
 
-class CellAnimation(CellNode):
+class CellAnimation(CellLeaf):
     def __init__(self, name, url, title="", icon=None):
-        CellNode.__init__(self)
+        super().__init__(self)
         self.__name__ = name
         self.href = url
         self.title = title
@@ -330,9 +351,9 @@ class CellAnimation(CellNode):
         return self.icon
 
 
-class CellWebContent(CellNode):
+class CellWebContent(CellLeaf):
     def __init__(self, name, url, title="", icon=None):
-        CellNode.__init__(self)
+        super().__init__(self)
         self.__name__ = name
         self.href = url
         self.title = title
