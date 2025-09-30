@@ -5,9 +5,9 @@ def appmaker(zodb_root):
         app_root = BeeHive()
         
         # --- Creación del Honeycomb por defecto ---
-        hc = Honeycomb('default', "Convida Abejas")
+        hc = Honeycomb('demo', "Demo Convida")
         hc.__parent__ = app_root
-        app_root['default'] = hc
+        app_root['demo'] = hc
 
         cell1 = CellText('intro', "Welcome text", title="Introduction")
         cell1.__parent__ = hc
