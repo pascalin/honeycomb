@@ -22,7 +22,7 @@ class BeeHive(PersistentMapping):
     # gestión de nodos y aristas
     def add_node(self, node):
         node_id = str(getattr(node, "__name__", None) or getattr(node, "id", None))
-        node.__parent__ = self
+        #node.__parent__ = self
         self.__nodes__[node_id] = node
 
     def get_node_by_name(self, name):
@@ -101,17 +101,22 @@ class CellEdge(Persistent):
         self.to_node = to_node
         self.kind = kind
 
-class HoneycombGraph(Honeycomb):
+class HoneycombGraph(PersistentMapping):
     def __init__(self, name="", title="", *args, **kwargs):
-        super().__init__(name, title)  
+        super().__init__()
+        self.__name__ = name
+        self.title = title
         self.nodes = PersistentList()
         self.edges = PersistentList()
 
     def add_node(self, node):
         self.nodes.append(node)
         # También agregar al mapping para compatibilidad con Honeycomb
-        if hasattr(node, '__name__') and node.__name__:
-            self[node.__name__] = node
+        node_name = getattr(node, '__name__', None)
+        if node_name:
+            self[node_name] = node
+        else:
+            self[str(node.id)] = node
         self._p_changed = True
 
     def add_edge(self, edge):
