@@ -131,12 +131,12 @@ class HoneycombGraph(PersistentMapping):
         return None
 
     @classmethod
-    def from_json(self, json_data, name="graph", title="Honeycomb Graph"):
+    def from_json(cls, json_data, name="graph", title="Honeycomb Graph"):
         graph_data = json.loads(json_data)
         # Diccionario para mapear ID de JSON a objeto de nodo de Python
         nodes_map = {}
 
-        graph = HoneycombGraph(name, title)
+        graph = cls(name, title)
 
         # 1. Crear todos los objetos de nodo
         for node_data in graph_data['nodes']:
