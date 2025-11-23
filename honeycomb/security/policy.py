@@ -2,8 +2,13 @@ from pyramid.authentication import AuthTktCookieHelper
 from pyramid.request import RequestLocalCache
 from pyramid.security import Allowed, Denied
 
-from .. import models
+from ..models.axes import CellBuilder
+from ..models.users import DroneUser
 
+
+USERS = {
+    'convida@unam.social': DroneUser('convida@unam.social', 'Convida UNAM', '/static/convida-icon.png', '/static/convida-bg.png'),
+}
 
 class SecurityPolicy:
     def __init__(self, secret):
@@ -17,24 +22,13 @@ class SecurityPolicy:
             return None
 
         userid = identity['userid']
-        
-        if userid == 'convida@unam.social':
-            user = {
-                'userid': userid,
-                'displayname': 'Convida UNAM',
-                'username': 'convida',
-                'icon': '/static/convida-icon.png',
-                'background': '/static/convida-bg.png',
-            }
-        else:
-            user = {
-                'userid': userid,
-                'displayname': 'Anonymous Bee',
-                'username': 'queen_bee',
-                'icon': '/static/bumblebee-16x16.png',
-                'background': '',
-            }
-        return user
+
+        if userid not in USERS:
+            return None
+
+        identity = USERS[userid]
+
+        return identity
 
     def identity(self, request):
         return self.identity_cache.get_or_create(request)
@@ -42,7 +36,8 @@ class SecurityPolicy:
     def authenticated_userid(self, request):
         user = self.identity(request)
         if user is not None:
-            return user['userid']
+            return user.userid
+        return None
 
     def remember(self, request, userid, **kw):
         return self.authtkt.remember(request, userid, **kw)
@@ -56,6 +51,9 @@ class SecurityPolicy:
         if identity is None:
             return Denied("You need to sign in to view this contents")
         elif permission == 'read':
-            return Allowed('Access granted for user %s', identity['username'])
+            if CellBuilder.has_access(context, identity):
+                return Allowed('Access granted for user %s', identity['username'])
+            else:
+                return Denied("You are not allowed to access this resource")
         else:
             return Denied("You are not allowed to access this resource")
