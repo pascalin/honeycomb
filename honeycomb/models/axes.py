@@ -6,28 +6,34 @@ import numpy as np
 from scipy import spatial
 
 
-LABELS_DEFAULT = 'problem_solving', 'integration', 'abstract_thinking'
+AXES_LABELS_DEFAULT = 'problem_solving', 'integration', 'abstract_thinking'
+AXES_DEFAULT_VALUE = 0
+
+JellyPack = namedtuple('JellyPack', AXES_LABELS_DEFAULT, defaults=[AXES_DEFAULT_VALUE] * len(AXES_LABELS_DEFAULT))
 
 
 class CellBuilder(Persistent):
     "Helper class to set cell properties"
-    def __init__(self, axes=LABELS_DEFAULT, default=0):
-        self.__axes__ = axes
-        if isinstance(default, Sequence) and len(default) < len(axes):
-            default = default * (len(axes) // len(default))
-        elif not isinstance(default, Sequence):
-            default = [default] * len(axes)
-        CellBuilder.JellyPack = namedtuple('JellyPack', axes, defaults=default)
+    __axes__ = AXES_LABELS_DEFAULT
 
-    def fill_cell(self, cell, *values, **kwvalues):
-        cell.__axes__ = self.JellyPack(*values, **kwvalues)
+    @staticmethod
+    def fill_cell(cell, *values, **kwvalues):
+        cell.__axes__ = JellyPack(*values, **kwvalues)
 
     def set_walls(self, cell, limits):
         cell.__limits__ = {k:limits[k] for k in limits if k in self.__axes__}
 
-    def set_badge(self, cell, badge):
+    @staticmethod
+    def set_badge(cell, badge):
         cell.__badge__ = badge
 
+    @staticmethod
+    def has_access(cell, user):
+        if hasattr(cell, '__limits__'):
+            for k,v in cell.__limits__.items():
+                if user.get_stats(k) < v:
+                    return False
+        return True
 
 
 class HoneycombExplorer(Persistent):
@@ -49,4 +55,4 @@ class HoneycombExplorer(Persistent):
                     coords.append(item[1].__axes__)
         print(coords)
         self.matrix = spatial.distance_matrix(np.array(coords), np.array(coords))
-        self.nodes = names
+        self.names = names
