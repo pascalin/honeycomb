@@ -51,6 +51,18 @@ def honeycomb_update(request):
             request.storage.delete(prev_filename)
     return HTTPSeeOther(request.resource_url(request.context))
 
+
+@view_config(context=Honeycomb, name='matrix', renderer='json')
+def honeycomb_matrix(request):
+    "This view returns a copy of the honeycomb distance matrix triggering its calculation if it isn't already available."
+    if hasattr(request.context, '__explorer__'):
+        matrix = request.context.__explorer__.matrix
+        if not matrix:
+            request.context.__explorer__.update_matrix()
+            matrix = request.context.__explorer__.matrix
+        return matrix.tolist()
+
+
 @view_config(context=CellText, renderer='honeycomb:templates/cell.jinja2')
 def textcell(request):
     if hasattr(request.context, 'title'):
