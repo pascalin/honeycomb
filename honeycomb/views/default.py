@@ -60,6 +60,20 @@ def textcell(request):
     return {'project': 'Honeycomb', 'title': cell_title, 'contents': request.context.contents}
 
 
+@view_config(context=CellNode, renderer='templates/view_cell_node.jinja2')
+def view_cell_node(context, request):
+    children = []
+    for name, node in context.items():
+        node_url = request.resource_url(node)
+        children.append((node, node_url))
+    return {
+        'project': 'BeeHive Project',
+        'title': context.__name__,
+        'children': children,
+        'request': request,
+    }
+
+
 @view_config(context=CellText, name='CreateNew', renderer='templates/view_cell_text.jinja2')
 def view_cell_text(context, request):
     # Ejemplo de creación de un nuevo nodo
