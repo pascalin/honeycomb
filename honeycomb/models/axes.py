@@ -1,3 +1,5 @@
+"""Defines data structures for node coordinates and implements helper classes to create, update and employ the honeycomb node distance matrix or individual node coordinates."""
+
 from collections import namedtuple
 from collections.abc import Sequence
 from persistent import Persistent
