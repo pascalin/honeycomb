@@ -3,6 +3,7 @@ from pyramid.httpexceptions import HTTPSeeOther, HTTPFound
 from pyramid_storage.exceptions import FileNotAllowed
 from pyramid_storage import extensions
 from pyramid import traversal
+from pyramid.response import FileIter
 
 from ..models import *
 
@@ -51,6 +52,29 @@ def honeycomb_update(request):
             request.storage.delete(prev_filename)
     return HTTPSeeOther(request.resource_url(request.context))
 
+
+#New style views
+@view_config(context=CellAudio, renderer='json', request_method="GET", xhr=True)
+def audio_metadata_view(request):
+    cell = request.context
+    if not cell.title:
+        title = cell.name.title()
+    else:
+        title = cell.title
+    return {'title': title, 'id': cell.id.hex, 'length': cell.length, 'mime-type': cell.mime, 'stream_url': request.resource_url(cell)+"stream"}
+
+
+@view_config(context=CellAudio, name="stream", renderer='json', request_method="GET")
+def audio_stream_view(request):
+    cell = request.context
+    response = request.response
+    response.content_type = cell.mime
+    response.app_iter = FileIter(cell.data.open("r"))
+
+    return response
+
+
+#Old style views (deprecated)
 @view_config(context=CellText, renderer='honeycomb:templates/cell.jinja2')
 def textcell(request):
     if hasattr(request.context, 'title'):
@@ -139,6 +163,7 @@ def edit_cell_animation(context, request):
         context.icon = request.params.get('icon', context.icon)
         return HTTPFound(location=request.resource_url(context))
     return {"cell": context}
+
 
 @view_config(context=CellWebContent, renderer='honeycomb:templates/view_cell_webcontent.jinja2')
 def webcell(context, request):
