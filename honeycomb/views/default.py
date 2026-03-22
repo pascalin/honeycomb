@@ -54,6 +54,17 @@ def honeycomb_update(request):
 
 
 #New style views
+@view_config(context=Honeycomb, name='matrix', renderer='json')
+def honeycomb_matrix(request):
+    "This view returns a copy of the honeycomb distance matrix triggering its calculation if it isn't already available."
+    if hasattr(request.context, '__explorer__'):
+        matrix = request.context.__explorer__.matrix
+        if not matrix:
+            request.context.__explorer__.update_matrix()
+            matrix = request.context.__explorer__.matrix
+        return matrix.tolist()
+
+
 @view_config(context=CellAudio, renderer='json', request_method="GET", xhr=True)
 def audio_metadata_view(request):
     cell = request.context
